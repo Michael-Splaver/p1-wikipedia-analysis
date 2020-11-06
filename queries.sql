@@ -1,9 +1,7 @@
---databases
 CREATE DATABSE wikimedia_dumps_db
+USE wikimedia_dumps_db
 
 --Q1 Which English wikipedia article got the most traffic on October 20?
-
---table pageviews for oct 20th
 CREATE EXTERNAL TABLE pageviews_oct_20(
     domain_code STRING,
     page_title STRING,
@@ -23,7 +21,6 @@ WHERE domain_code = 'en' OR domain_code = 'en.m'
 GROUP BY page_title
 ORDER BY page_views DESC;
 
---intermediate tables
 CREATE EXTERNAL TABLE pageviews_oct_20_title(
     page_title STRING,
     count_views INT
@@ -33,12 +30,7 @@ FIELDS TERMINATED BY '\t'
 LOCATION '/user/nat/output/pageviews-oct-20-title';
 
 -- Q2. What wikipedia article has the largest fraction of its readers follow an internal link to another wikipedia article?
-
-
 --NOTE: used data from August (clickstream and pageviews)
-
-
---tables
 CREATE EXTERNAL TABLE clickstream(
     referrer STRING,
     referred STRING,
@@ -58,7 +50,6 @@ WHERE type='link'
 GROUP BY referrer
 ORDER BY link_count DESC;
 
---interemediate tables
 CREATE EXTERNAL TABLE clickstream_referrer(
     referrer STRING,
     link_count INT
@@ -85,7 +76,6 @@ WHERE domain_code = 'en' OR domain_code = 'en.m' OR domain_code = 'en.z'
 GROUP BY page_title
 ORDER BY page_views DESC;
 
---intermediate tables
 CREATE EXTERNAL TABLE pageviews_aug_title(
     page_title STRING,
     count_views INT
@@ -107,63 +97,50 @@ ORDER BY links_clicked_per_view DESC;
 --3. What series of wikipedia articles, starting with [Hotel California](https://en.wikipedia.org/wiki/Hotel_California),
 -- keeps the largest fraction of its readers clicking on internal links?
 -- This is similar to (2), but you should continue the analysis past the first article.
-
-
 --NOTE: used data from August (clickstream and pageviews)
-
-
 SELECT clickstream.referrer, clickstream.referred, round((clickstream.count/pageviews.count_views)*100,2) as percentage_clickthrough
 FROM pageviews_aug_title AS pageviews
 INNER JOIN clickstream
 ON pageviews.page_title = clickstream.referrer
 WHERE pageviews.page_title = 'Hotel_California'
 ORDER BY percentage_clickthrough DESC
-LIMIT 5;
--- 100%
+LIMIT 5; -- 100%
 SELECT clickstream.referrer, clickstream.referred, round((clickstream.count/pageviews.count_views)*100,2) as percentage_clickthrough
 FROM pageviews_aug_title AS pageviews
 INNER JOIN clickstream
 ON pageviews.page_title = clickstream.referrer
 WHERE pageviews.page_title = 'Hotel_California_(Eagles_album)'
 ORDER BY percentage_clickthrough DESC
-LIMIT 5;
--- 100% * 3.88% = 3.88%
+LIMIT 5; -- 100% * 3.88% = 3.88%
 SELECT clickstream.referrer, clickstream.referred, round((clickstream.count/pageviews.count_views)*100,2) as percentage_clickthrough
 FROM pageviews_aug_title AS pageviews
 INNER JOIN clickstream
 ON pageviews.page_title = clickstream.referrer
 WHERE pageviews.page_title = 'The_Long_Run_(album)'
 ORDER BY percentage_clickthrough DESC
-LIMIT 5;
--- 3.88% * 8.07% = 0.31%
+LIMIT 5; -- 3.88% * 8.07% = 0.31%
 SELECT clickstream.referrer, clickstream.referred, round((clickstream.count/pageviews.count_views)*100,2) as percentage_clickthrough
 FROM pageviews_aug_title AS pageviews
 INNER JOIN clickstream
 ON pageviews.page_title = clickstream.referrer
 WHERE pageviews.page_title = 'Eagles_Live'
 ORDER BY percentage_clickthrough DESC
-LIMIT 5;
---0.31% * 12.57% = 0.039%
+LIMIT 5; --0.31% * 12.57% = 0.039%
 SELECT clickstream.referrer, clickstream.referred, round((clickstream.count/pageviews.count_views)*100,2) as percentage_clickthrough
 FROM pageviews_aug_title AS pageviews
 INNER JOIN clickstream
 ON pageviews.page_title = clickstream.referrer
 WHERE pageviews.page_title = 'Eagles_Greatest_Hits,_Vol._2'
 ORDER BY percentage_clickthrough DESC
-LIMIT 5;
---0.039% * 27.25% = 0.011%
-
+LIMIT 5; --0.039% * 27.25% = 0.011%
 
 --4. Find an example of an english wikipedia article that is relatively more popular in the UK.
 -- Find the same for the US and Australia.
-
 --NOTE: used data from October 20th 
-
---assuming 8am - 7pm are the most active hours
-
--- 14 utc - 1 utc = US CENTRAL
--- 8 utc - 19 utc = UK TIME
--- 21 utc - 8 utc = AUS TIME (AEDT)
+--Assuming 8am - 7pm are the most active hours
+-- 14 UTC - 1 UTC = US CENTRAL
+-- 8 UTC - 19 UTC = UK TIME
+-- 21 UTC - 8 UTC = AUS TIME (AEDT)
 
 --US
 CREATE EXTERNAL TABLE pageviews_oct_20_us(
@@ -310,10 +287,7 @@ FIELDS TERMINATED BY '\t'
 LOCATION '/user/nat/output/pageviews-oct-20-aus-percent-title';
 
 --5. Analyze how many users will see the average vandalized wikipedia page before the offending edit is reversed.
-
-
 --NOTE: used data from August
-
 CREATE EXTERNAL TABLE wiki_history(
     wiki_db STRING, 
     event_entity STRING,
@@ -410,34 +384,24 @@ FIELDS TERMINATED BY '\t'
 LOCATION '/user/nat/output/longest-reverted';
 
 SELECT round(avg(revision_seconds_to_identity_revert),2) AS average_to_revert
-FROM wiki_history_longest_reverted;
-
---AVERAGE LIFE: 452,388.48 seconds = 5.24 days average
+FROM wiki_history_longest_reverted; --AVERAGE LIFE: 452,388.48 seconds = 5.24 days average
 
 SELECT sum(count_views) as total_page_views
 FROM pageviews_aug
 WHERE domain_code = 'en' OR domain_code = 'en.m' OR domain_code = 'en.z';
-
 --TOTAL VIEWS AUG: 7,393,968,615 views = 238,515,116.61 views/day
 
 SELECT count(*) as total_pages
 FROM pageviews_aug
 WHERE domain_code = 'en' OR domain_code = 'en.m' OR domain_code = 'en.z'; 
-
 --TOTAL PAGES: 16,139,856
-
 --TOTAL VIEWS PER DAY PER PAGE =  238,515,116.61 / 16,139,856 = 14.78 views/day on each page
-
 -- 14.78 views/day 5.24 days = 77.45 views before vandalized edit is reversed
 
 --6. Run an analysis you find interesting on the wikipedia datasets we're using.
-
 --FIND THE USER WITH THE MOST REVISIONS
-
 SELECT event_user_text AS username, max(event_user_revision_count) AS revisions
 FROM wiki_history
 GROUP BY event_user_text
 ORDER BY revisions DESC
-LIMIT 10;
-
---Ser Amantio di Nicolao
+LIMIT 10; --Ser Amantio di Nicolao
