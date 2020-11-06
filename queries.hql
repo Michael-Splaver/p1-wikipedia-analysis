@@ -105,6 +105,7 @@ ON pageviews.page_title = clickstream.referrer
 WHERE pageviews.page_title = 'Hotel_California'
 ORDER BY percentage_clickthrough DESC
 LIMIT 5; -- 100%
+
 SELECT clickstream.referrer, clickstream.referred, round((clickstream.count/pageviews.count_views)*100,2) as percentage_clickthrough
 FROM pageviews_aug_title AS pageviews
 INNER JOIN clickstream
@@ -112,6 +113,7 @@ ON pageviews.page_title = clickstream.referrer
 WHERE pageviews.page_title = 'Hotel_California_(Eagles_album)'
 ORDER BY percentage_clickthrough DESC
 LIMIT 5; -- 100% * 3.88% = 3.88%
+
 SELECT clickstream.referrer, clickstream.referred, round((clickstream.count/pageviews.count_views)*100,2) as percentage_clickthrough
 FROM pageviews_aug_title AS pageviews
 INNER JOIN clickstream
@@ -119,6 +121,7 @@ ON pageviews.page_title = clickstream.referrer
 WHERE pageviews.page_title = 'The_Long_Run_(album)'
 ORDER BY percentage_clickthrough DESC
 LIMIT 5; -- 3.88% * 8.07% = 0.31%
+
 SELECT clickstream.referrer, clickstream.referred, round((clickstream.count/pageviews.count_views)*100,2) as percentage_clickthrough
 FROM pageviews_aug_title AS pageviews
 INNER JOIN clickstream
@@ -126,6 +129,7 @@ ON pageviews.page_title = clickstream.referrer
 WHERE pageviews.page_title = 'Eagles_Live'
 ORDER BY percentage_clickthrough DESC
 LIMIT 5; --0.31% * 12.57% = 0.039%
+
 SELECT clickstream.referrer, clickstream.referred, round((clickstream.count/pageviews.count_views)*100,2) as percentage_clickthrough
 FROM pageviews_aug_title AS pageviews
 INNER JOIN clickstream
